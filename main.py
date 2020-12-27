@@ -2,11 +2,12 @@ import pickle
 import numpy as np
 
 import flask
-from flask import render_template, request
+from flask import Flask, render_template, request
 
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity as cos_sim
-from flask import Flask
+
+import os
+local_dir = os.path.dirname(os.path.realpath(__file__))
 
 with open("pickles/full_cv.pkl", "rb") as f:
     df = pickle.load(f)
