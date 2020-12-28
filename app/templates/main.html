@@ -19,80 +19,111 @@
 
         <h3>Paste your abstract below (or simply start typing).</h3>
 
-        <textarea class="form-control" id="abstract" rows="5" onchange="update()">Deep learning frameworks have often focused on either usability or speed, but not both. PyTorch is a machine learning library that shows that these two goals are in fact compatible: it provides an imperative and Pythonic programming style that supports code as a model, makes debugging easy and is consistent with other popular scientific computing libraries, while remaining efficient and supporting hardware accelerators such as GPUs. In this paper, we detail the principles that drove the implementation of PyTorch and how they are reflected in its architecture. We emphasize that every aspect of PyTorch is a regular Python program under the full control of its user. We also explain how the careful and pragmatic implementation of the key components of its runtime enables them to work together to achieve compelling performance. We demonstrate the efficiency of individual subsystems, as well as the overall speed of PyTorch on several common benchmarks. </textarea>
+        <textarea class="form-control" id="abstract-input" rows="5" oninput="update()"
+            placeholder="Deep learning frameworks have often focused on either usability or speed, but not both. PyTorch is a machine learning library that shows that these two goals are in fact compatible: it provides an imperative and Pythonic programming style that supports code as a model, makes debugging easy and is consistent with other popular scientific computing libraries, while remaining efficient and supporting hardware accelerators such as GPUs. In this paper, we detail the principles that drove the implementation of PyTorch and how they are reflected in its architecture. We emphasize that every aspect of PyTorch is a regular Python program under the full control of its user. We also explain how the careful and pragmatic implementation of the key components of its runtime enables them to work together to achieve compelling performance. We demonstrate the efficiency of individual subsystems, as well as the overall speed of PyTorch on several common benchmarks."></textarea>
+        </textarea>
         <br>
 
-        <button class="btn btn-primary" type="button" id="spinner-button" onclick="update()">
-            <span class="spinner-border spinner-border-sm" role="status" style="display: none"
-                id="spinner-loader"></span>
-            See Papers
-        </button>
+        <div class="row">
+            <div class="col-sm-3">
+                <button class="btn btn-primary" type="button" id="spinner-button" onclick="update()">
+                    <span class="spinner-border spinner-border-sm" role="status" style="display: none"
+                        id="spinner-loader"></span>
+                    Search for Arxiv Papers
+                </button>
+            </div>
+            <div class="col-sm-2">
+                <input type="checkbox" class="form-check-input" onclick="optionChange()"
+                    id="checkbox-search-as-you-type" checked>
+                <label class="form-check-label" for="exampleCheck1">Seach as you type</label>
+            </div>
+
+        </div>
 
         <hr>
 
         <br>
 
-        <table id="results-table" class="table table-secondary">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Abstract</th>
-                    <th scope="col">Link</th>
-                </tr>
-            </thead>
+        <div id="table-loaded">
+            <table id="results-table" class="table table-secondary">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Abstract</th>
+                        <th scope="col">Link</th>
+                    </tr>
+                </thead>
 
-            <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Title</td>
-                    <td>Abstract</td>
-                    <td>http://</td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>Title</td>
+                        <td>Abstract</td>
+                        <td>http://</td>
+                    </tr>
 
-                <tr>
-                    <th scope="row">2</th>
-                    <td>Title</td>
-                    <td>Abstract</td>
-                    <td>http://</td>
-                </tr>
+                    <tr>
+                        <th scope="row">2</th>
+                        <td>Title</td>
+                        <td>Abstract</td>
+                        <td>http://</td>
+                    </tr>
 
-                <tr>
-                    <th scope="row">3</th>
-                    <td>Title</td>
-                    <td>Abstract</td>
-                    <td>http://</td>
-                </tr>
+                    <tr>
+                        <th scope="row">3</th>
+                        <td>Title</td>
+                        <td>Abstract</td>
+                        <td>http://</td>
+                    </tr>
 
-                <tr>
-                    <th scope="row">4</th>
-                    <td>Title</td>
-                    <td>Abstract</td>
-                    <td>http://</td>
-                </tr>
+                    <tr>
+                        <th scope="row">4</th>
+                        <td>Title</td>
+                        <td>Abstract</td>
+                        <td>http://</td>
+                    </tr>
 
-                <tr>
-                    <th scope="row">5</th>
-                    <td>Title</td>
-                    <td>Abstract</td>
-                    <td>http://</td>
-                </tr>
+                    <tr>
+                        <th scope="row">5</th>
+                        <td>Title</td>
+                        <td>Abstract</td>
+                        <td>http://</td>
+                    </tr>
 
-            </tbody>
+                </tbody>
 
-        </table>
+            </table>
+        </div>
+
+        <div id="table-placeholder-loading" class="spinner-border text-center" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
 
     </main><!-- /.container -->
 
     <script>
 
+        function optionChange() {
+            let autoupdate = document.getElementById("checkbox-search-as-you-type").checked
+            console.log("autoupdate is " + autoupdate)
+            if (autoupdate) {
+                document.getElementById("abstract-input").setAttribute("oninput", "update()")
+            }
+            else {
+                document.getElementById("abstract-input").removeAttribute("oninput")
+            }
+        }
+
         async function update() {
 
             document.getElementById("spinner-loader").style.display = ''
+            document.getElementById("table-loaded").style.display = 'none' // hide table
+            document.getElementById("table-placeholder-loading").style.display = '' // show spinner      
 
             let response = await fetch("recommend", {
                 method: 'POST',
-                body: JSON.stringify({ 'abstract': document.getElementById("abstract").value }),
+                body: JSON.stringify({ 'abstract': document.getElementById("abstract-input").value }),
                 headers: { 'Content-Type': 'application/json' },
             });
 
@@ -107,22 +138,25 @@
             var table = document.getElementById("results-table");
 
             for (let i = 0; i < titles.length; i++) {
-                table.rows[i+1].cells[1].innerHTML = titles[i];
+                table.rows[i + 1].cells[1].innerHTML = titles[i];
             }
 
             for (let i = 0; i < abstracts.length; i++) {
-                table.rows[i+1].cells[2].innerHTML = abstracts[i];
+                table.rows[i + 1].cells[2].innerHTML = abstracts[i];
             }
 
             for (let i = 0; i < links.length; i++) {
                 let url = "https://arxiv.org/abs/" + links[i];
-                table.rows[i+1].cells[3].innerHTML = "<a href=" + url + ">" + url + "</a>"; 
+                table.rows[i + 1].cells[3].innerHTML = "<a href=" + url + ">" + url + "</a>";
             }
 
             console.log("update");
 
             // hide spinner
             document.getElementById("spinner-loader").style.display = 'none'
+
+            document.getElementById("table-placeholder-loading").style.display = 'none' // hide spinner   
+            document.getElementById("table-loaded").style.display = '' // show table
 
             // setTimeout(update, 1000);
         }
