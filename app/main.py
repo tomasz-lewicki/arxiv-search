@@ -1,12 +1,11 @@
+import os
 import pickle
-import numpy as np
 
 import flask
-from flask import Flask, render_template, request
-
+import numpy as np
+from flask import Flask, render_template, request, send_from_directory
 from sklearn.metrics.pairwise import cosine_similarity as cos_sim
 
-import os
 local_dir = os.path.dirname(os.path.realpath(__file__))
 
 with open("pickles/full_cv.pkl", "rb") as f:
@@ -33,6 +32,12 @@ def inference(abstract, top_k=5):
 
 
 app = Flask(__name__)
+
+# favicon route
+@app.route("/favicon.svg")
+def favicon():
+    # return send_from_directory(os.path.join(, 'static'),'favicon.svg')
+    return send_from_directory(app.root_path + "/static", "favicon.svg")
 
 
 @app.route("/")
