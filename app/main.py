@@ -1,7 +1,9 @@
 import os
 import pickle
+import time 
 
 import flask
+import scipy
 import numpy as np
 from flask import Flask, render_template, request, send_from_directory
 from sklearn.metrics.pairwise import cosine_similarity as cos_sim
@@ -17,18 +19,43 @@ with open("pickles/vectorizer.pkl", "rb") as f:
 with open("pickles/X_tfidf.pkl", "rb") as f:
     X_tfidf = pickle.load(f)
 
+# For fast column lookups
+X_tfidf_csc = X_tfidf.tocsc()
+
+def calculate_cos_sim_fast(query_str: str):
+    # Performs query only on columns existing in the 
+    # Time complexity is O(n) where n is # of unique tokens
+    # This is more efficinet, but only for small inputs 
+    
+    # tokenize the string
+    x = np.array(tfidf_v.transform([query_str]).todense())
+    
+    # construct query vector
+    x_nonzero_idx = x.nonzero()[1]
+    x_small = x[:,x_nonzero_idx]
+    
+    # Narrow the similarity computation to tokens that are present in the query_string
+    X_words_sparse = scipy.sparse.hstack([X_tfidf_csc.getcol(c) for c in x_nonzero_idx])
+
+    # the vectors are already normalized
+    # we can thus limit a*b/(norm(a)*norm(b)) to a*b
+    cos_sim = X_words_sparse @ x_small.T
+
+    return cos_sim
+
+
 
 def inference(abstract, top_k=5):
-
-    x = tfidf_v.transform([abstract])
-    sims = cos_sim(X_tfidf, x)
-    sims = np.squeeze(sims)
-    most_sim_idx = sims.argsort()[::-1]  # reverse
+    st = time.perf_counter()
+    similarities = calculate_cos_sim_fast(abstract)
     # if we also want to reject the paper itself, then it'd be most_sim_idx[-2::-1]
+    most_sim_idx = similarities.squeeze().argsort()[::-1]
+    df_similar = df.iloc[most_sim_idx[:5]]
 
-    df_fajne = df.iloc[most_sim_idx[:top_k]]
+        
+    print(f"{1000 * (time.perf_counter() - st)}")
 
-    return df_fajne
+    return df_similar
 
 
 app = Flask(__name__)
